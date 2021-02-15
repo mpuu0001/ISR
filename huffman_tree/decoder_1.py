@@ -99,18 +99,10 @@ def decode_frm_files(dir_path: str) -> None:
         except FileNotFoundError:
             pass
 
-def perparation(dir_path):
-    """Prepare for encoding"""
-    make_directory(dir_path + "/new_payloads")
-    make_directory(dir_path + "/data")
-
 def main() -> None:
     # Set the working directory
     os.chdir('/Users/apple/Library/Preferences/PyCharmCE2019.1/scratches/iSR-master/code_payload/huffman_tree')
     dir_path = os.getcwd()
-
-    # Prepare for encoding
-    perparation(dir_path)
 
     # Decode
     print(decode_frm_file(dir_path, '/new_payloads/new_payload_1.txt', '/payloads/payload_1.txt'))
