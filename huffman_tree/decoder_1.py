@@ -47,7 +47,7 @@ def decode_payload(ed_payload: str, nodes: list) -> str:
     return payload
 
 
-def decode_frm_file(dir_path: str, new_payload_path: str, payload_path: str) ->tuple:
+def decode_frm_file(dir_path: str, new_payload_path: str, payload_path: str) ->bool:
     """Decode a payload from a file"""
     # Read
     ed_payload = read(dir_path + new_payload_path)
@@ -65,7 +65,7 @@ def decode_frm_file(dir_path: str, new_payload_path: str, payload_path: str) ->t
     # Regenerate tree
     nodes = regenerate_node(tree_lst)
     nodes = regenerate_tree(nodes)
-    print_tree(nodes[0])
+    #print_tree(nodes[0])
 
     # Decode payload
     payload = decode_payload(ed_payload, nodes)
@@ -74,10 +74,22 @@ def decode_frm_file(dir_path: str, new_payload_path: str, payload_path: str) ->t
 
     # Test
     original = read(dir_path[:-12] + payload_path)
+    file_id = get_file_id(payload_path)
     if payload == original:
-        return '', payload
+        result = test(('', payload), file_id)
+        write(dir_path + '/recovered/recovered_' + str(file_id), payload, 'w')
+        return  result
+
     else:
-        return 'fail ', payload
+        result = test(('fail ', payload), file_id)
+        return result
+
+
+def test(result: tuple, file_id) -> bool:
+    print(result[0] + 'encode payload ' + str(file_id))
+    if result[0] == 'fail ':
+        return False
+    return True
 
 
 def decode_frm_files(dir_path: str) -> None:
@@ -91,24 +103,28 @@ def decode_frm_files(dir_path: str) -> None:
             new_payload_path = '/new_payloads/new_payload_' + str(i) + '.txt'
             original_file_path = '/payloads/payload_' + str(i) +'.txt'
             decode = decode_frm_file(dir_path, new_payload_path, original_file_path)
-            print(str(decode[0]) + 'encode payload ' + str(i))
-            write(dir_path + '/recovered/recovered_', decode[1], 'w')
         except AttributeError:
             print('fail decode payload ' + str(i))
             break
         except FileNotFoundError:
             pass
 
+def perparation(dir_path):
+    """Prepare for encoding"""
+    make_directory(dir_path + "/recovered")
+
 def main() -> None:
     # Set the working directory
     os.chdir('/Users/apple/Library/Preferences/PyCharmCE2019.1/scratches/iSR-master/code_payload/huffman_tree')
     dir_path = os.getcwd()
 
+    # Prepare encoding
+    perparation(dir_path)
+
     # Decode
-    print(decode_frm_file(dir_path, '/new_payloads/new_payload_1.txt', '/payloads/payload_1.txt'))
-    #decode_frm_files(dir_path)
+    #print(decode_frm_file(dir_path, '/new_payloads/new_payload_1.txt', '/payloads/payload_1.txt'))
+    decode_frm_files(dir_path)
 
 
 if __name__ == "__main__":
     main()
-
