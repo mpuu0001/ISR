@@ -183,9 +183,17 @@ def test(payload: str, recovered: str) -> bool:
     return payload == recovered
 
 
+def perparation(dir_path):
+    """Prepare for encoding"""
+    make_directory(dir_path + "/recovered")
+
 def main() -> None:
     os.chdir('/Users/apple/Library/Preferences/PyCharmCE2019.1/scratches/iSR-master/code_payload/run_length')
     dir_path = os.getcwd()
+    
+    # Preparation for decoding 
+    perparation(dir_path)
+    
     files = get_files(dir_path[:-10] + '/huffman_tree/result.txt')
     #files = list(range(10001))
     decode_frm_files(dir_path, files)
