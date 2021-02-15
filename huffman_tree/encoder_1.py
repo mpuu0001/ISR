@@ -192,12 +192,21 @@ def encode_frm_files(dir_path: str, debug: bool) -> None:
             continue
         encode_frm_file(files[i], dir_path, file_id, debug)
 
-
+        
+def perparation(dir_path):
+    """Prepare for encoding"""
+    make_directory(dir_path + "/new_payloads")
+    make_directory(dir_path + "/data")
+    
+    
 def main() -> None:
     # Set the working directory
     os.chdir('/Users/apple/Library/Preferences/PyCharmCE2019.1/scratches/iSR-master/code_payload/huffman_tree')
     dir_path = os.getcwd()
-
+    
+    # Prepare for encoding
+    perparation(dir_path)
+    
     # Write data
     write(dir_path + "/data/data.csv", 'id,original_payload,new_payload\n', 'w')
     write(dir_path + "/result.txt", '', 'w')
