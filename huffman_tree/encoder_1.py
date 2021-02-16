@@ -4,7 +4,8 @@ import collections
 from huffman_tree import *
 
 sys.path.append('/Users/apple/Library/Preferences/PyCharmCE2019.1/scratches/iSR-master/code_payload')
-from my_io import read, write, get_file_id
+from my_io import *
+
 
 def partition(payload: str) -> tuple:
     """Split the given payload into several subgroups, where each
@@ -18,7 +19,7 @@ def partition(payload: str) -> tuple:
     # Store each subgroup into a list
     lst = []
     for i in range(0, len(payload), 4):
-        lst.append(payload[i:i+4])
+        lst.append(payload[i:i + 4])
 
     return lst, num_add
 
@@ -104,7 +105,7 @@ def encode_binary(dictnr: dict, debug: bool) -> tuple:
     # Get the max bits need to store each value of the dictionary
     len_new_val = get_max_bits(od) + 1
 
-    # Reform each value of the dictionary by the max bits 
+    # Reform each value of the dictionary by the max bits
     for x, y in od.items():
         if debug:
             print(f"{x} -> {od[x]}")
@@ -141,7 +142,7 @@ def encode_frm_file(file_path: str, dir_path: str, file_id: int, debug: bool) ->
 
     # Encode the given payload using Huffman tree
     new_pattern = encode_payload(pattern, dictnr)
-    new_payload = 4*'0' + list_to_binary(new_pattern)
+    new_payload = 4 * '0' + list_to_binary(new_pattern)
 
     # Encode my Huffman Tree into binary
     # Combine it with my encoded payload
@@ -153,17 +154,17 @@ def encode_frm_file(file_path: str, dir_path: str, file_id: int, debug: bool) ->
 
     # Write new payload
     if len(new_payload) <= len(payload):
-        write(dir_path + "/new_payloads/new_payload_"+str(file_id)+".txt", new_payload, 'w')
+        write(dir_path + "/new_payloads/new_payload_" + str(file_id) + ".txt", new_payload, 'w')
     else:
-        write(dir_path + "/result.txt", str(file_id)+',', 'a')
+        write(dir_path + "/result.txt", str(file_id) + ',', 'a')
 
     # Write data
-    content = str(file_id) +','+ str(len(payload)) +','+ str(len(new_payload)) + '\n'
+    content = str(file_id) + ',' + str(len(payload)) + ',' + str(len(new_payload)) + '\n'
     write(dir_path + "/data/data.csv", content, 'a')
 
     if debug:
-        print("num_add: " + str(int(num_add,2)) + '\n' +
-              'len_new_val: ' + str(len(len_new_val)-1))
+        print("num_add: " + str(int(num_add, 2)) + '\n' +
+              'len_new_val: ' + str(len(len_new_val) - 1))
 
 
 def encode_frm_files(dir_path: str, debug: bool) -> None:
@@ -183,28 +184,28 @@ def encode_frm_files(dir_path: str, debug: bool) -> None:
             continue
         encode_frm_file(files[i], dir_path, file_id, debug)
 
-        
+
 def perparation(dir_path):
     """Prepare for encoding"""
     make_directory(dir_path + "/new_payloads")
     make_directory(dir_path + "/data")
-    
-    
+
+
 def main() -> None:
     # Set the working directory
     os.chdir('/Users/apple/Library/Preferences/PyCharmCE2019.1/scratches/iSR-master/code_payload/huffman_tree')
     dir_path = os.getcwd()
-    
+
     # Prepare for encoding
     perparation(dir_path)
-    
+
     # Write data
     write(dir_path + "/data/data.csv", 'id,original_payload,new_payload\n', 'w')
     write(dir_path + "/result.txt", '', 'w')
 
     # Encode
     encode_frm_files(dir_path, False)
-    #encode_frm_file(dir_path +'/payloads/payload_1.txt', dir_path, 1, True)
+    # encode_frm_file(dir_path +'/payloads/payload_1.txt', dir_path, 1, True)
 
 
 if __name__ == "__main__":
