@@ -125,15 +125,6 @@ def encode_binary(dictnr: dict, debug: bool) -> tuple:
     return dict_to_binary(od), len_new_val
 
 
-def get_file_id(path: str) -> int:
-    """Get the id of a file"""
-    lst = list(path.split('_'))
-    lst = list(lst[1].split('.'))
-    file_id = int(lst[0])
-
-    return file_id
-
-
 def encode_frm_file(file_path: str, dir_path: str, file_id: int, debug: bool) -> None:
     """ Encode a payload from a single file """
     # Read
