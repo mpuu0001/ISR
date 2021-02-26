@@ -42,3 +42,11 @@ def remove_file(file_path: str) -> None:
 def remove_dir(dir_path: str) -> None:
     """Delete a directory"""
     shutil.rmtree(dir_path)
+
+    
+def get_files(result_path: str):
+    """ Get un-encode files """
+    file_id = read(result_path)
+    lst = list(file_id.split(','))
+    lst = list(map(int, lst[:-1]))
+    return lst
