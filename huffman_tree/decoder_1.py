@@ -5,7 +5,7 @@ import os
 sys.path.append('/Users/apple/Library/Preferences/PyCharmCE2019.1/scratches/iSR-master/code_payload')
 from my_io import *
 
-def extract_len_new_val(ed_payload: str) -> int:
+def extract_key_factors(ed_payload: str) -> int:
     """Extract the length of each new pattern"""
     i = 0
     while ed_payload[i] != '0':
@@ -13,22 +13,22 @@ def extract_len_new_val(ed_payload: str) -> int:
     return i
 
 
-def extract_tree(ed_payload: str, len_new_val: int) -> tuple:
+def extract_tree(ed_payload: str, len_new_val: int, bit: int) -> tuple:
     """Extract my huffman tree"""
 
     # initialise tree list
-    tree_lst = [ed_payload[:4+len_new_val]]
+    tree_lst = [ed_payload[:bit+len_new_val]]
 
     # Get first key and initialise first position
-    pos, key = 0, int(ed_payload[:4],2)
+    pos, key = 0, int(ed_payload[:bit],2)
 
     # Extract huffman tree
     while True:
-        pos += 4+len_new_val+1
-        previous_key, key = key, int(ed_payload[pos:pos+4],2)
+        pos += bit+len_new_val+1
+        previous_key, key = key, int(ed_payload[pos:pos+bit],2)
         if key < previous_key+1:
             break
-        tree_lst.append(ed_payload[pos:pos + 4 + len_new_val])
+        tree_lst.append(ed_payload[pos:pos + bit + len_new_val])
 
     pos = pos + 4
     return tree_lst, pos
@@ -47,23 +47,25 @@ def decode_payload(ed_payload: str, nodes: list) -> str:
     return payload
 
 
-def decode_frm_file(dir_path: str, new_payload_path: str, payload_path: str) ->bool:
+def decode_frm_file(dir_path: str, new_payload_path: str, payload_path: str) ->None:
     """Decode a payload from a file"""
     # Read
     ed_payload = read(dir_path + new_payload_path)
 
     # Extract key factors
-    len_new_val = extract_len_new_val(ed_payload)
+    num_bits = extract_key_factors(ed_payload)
+    ed_payload = ed_payload[num_bits+1:]
+    len_new_val = extract_key_factors(ed_payload)
     num_add = int(ed_payload[len_new_val+1:len_new_val+3], 2)
     ed_payload = ed_payload[len_new_val+3:]
 
     # Extract tree
-    new = extract_tree(ed_payload, len_new_val)
+    new = extract_tree(ed_payload, len_new_val, num_bits)
     tree_lst, pos = new[0], new[1]
     ed_payload = ed_payload[pos:]
 
     # Regenerate tree
-    nodes = regenerate_node(tree_lst)
+    nodes = regenerate_node(tree_lst, num_bits)
     nodes = regenerate_tree(nodes)
     #print_tree(nodes[0])
 
@@ -76,42 +78,39 @@ def decode_frm_file(dir_path: str, new_payload_path: str, payload_path: str) ->b
     original = read(dir_path[:-12] + payload_path)
     file_id = get_file_id(payload_path)
     if payload == original:
-        result = test(('', payload), file_id)
+        print('decode payload ' + str(file_id))
         write(dir_path + '/recovered/recovered_' + str(file_id), payload, 'w')
-        return  result
 
     else:
-        result = test(('fail ', payload), file_id)
-        return result
+        print('fail decode payload ' + str(file_id))
 
 
-def test(result: tuple, file_id) -> bool:
-    print(result[0] + 'encode payload ' + str(file_id))
-    if result[0] == 'fail ':
-        return False
-    return True
-
-
-def decode_frm_files(dir_path: str) -> None:
+def decode_frm_files(dir_path: str, files: list = None) -> None:
     """Decode payloads from files"""
     # Get payload files
     payloads_files = os.listdir(dir_path[:-12] + "/payloads")
 
+    lst = range(len(payloads_files))
+    if files:
+        lst = files
+
     # Decode payloads from files
-    for i in range(len(payloads_files)):
+    for i in lst:
         try:
             new_payload_path = '/new_payloads/new_payload_' + str(i) + '.txt'
             original_file_path = '/payloads/payload_' + str(i) +'.txt'
-            decode = decode_frm_file(dir_path, new_payload_path, original_file_path)
+            decode_frm_file(dir_path, new_payload_path, original_file_path)
         except AttributeError:
             print('fail decode payload ' + str(i))
             break
         except FileNotFoundError:
             pass
 
+
 def perparation(dir_path):
     """Prepare for encoding"""
     make_directory(dir_path + "/recovered")
+
 
 def main() -> None:
     # Set the working directory
@@ -122,8 +121,11 @@ def main() -> None:
     perparation(dir_path)
 
     # Decode
-    #print(decode_frm_file(dir_path, '/new_payloads/new_payload_1.txt', '/payloads/payload_1.txt'))
     decode_frm_files(dir_path)
+    #decode_frm_file(dir_path, '/new_payloads/new_payload_1300.txt', '/payloads/payload_1300.txt')
+
+    files = get_files(dir_path[:-12] + '/huffman_tree/result.txt')
+    decode_frm_files(dir_path, files)
 
 
 if __name__ == "__main__":
