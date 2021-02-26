@@ -7,19 +7,19 @@ sys.path.append('/Users/apple/Library/Preferences/PyCharmCE2019.1/scratches/iSR-
 from my_io import *
 
 
-def partition(payload: str) -> tuple:
+def partition(payload: str, bit: int) -> tuple:
     """Split the given payload into several subgroups, where each
     subgroup contains 4 bits"""
     # Number of bits we will pad into the payload
     num_add = 0
-    if (len(payload) % 4) > 0:
-        num_add = 4 - (len(payload) % 4)
+    if (len(payload) % bit) > 0:
+        num_add = bit - (len(payload) % bit)
     payload += num_add * '0'
 
     # Store each subgroup into a list
     lst = []
-    for i in range(0, len(payload), 4):
-        lst.append(payload[i:i + 4])
+    for i in range(0, len(payload), bit):
+        lst.append(payload[i:i + bit])
 
     return lst, num_add
 
@@ -126,13 +126,13 @@ def encode_binary(dictnr: dict, debug: bool) -> tuple:
     return dict_to_binary(od), len_new_val
 
 
-def encode_frm_file(file_path: str, dir_path: str, file_id: int, debug: bool) -> None:
+def encode_frm_file(file_path: str, dir_path: str, file_id: int, debug: bool, bit: int, final: bool) -> None:
     """ Encode a payload from a single file """
     # Read
     payload = read(file_path)
 
     # Partition into 4-bits per group
-    new = partition(payload)
+    new = partition(payload, bit)
     pattern = new[0]
     num_add = new[1]
     new = unique(pattern)
@@ -145,12 +145,14 @@ def encode_frm_file(file_path: str, dir_path: str, file_id: int, debug: bool) ->
     new_payload = 4 * '0' + list_to_binary(new_pattern)
 
     # Encode my Huffman Tree into binary
-    # Combine it with my encoded payload
     new = encode_binary(dictnr, debug)
     encoded_dict = new[0]
     len_new_val = new[1] * '1' + '0'
     num_add = f"{num_add:b}".zfill(2)
-    new_payload = len_new_val + num_add + encoded_dict + new_payload
+
+    # Combine it with my encoded payload
+    num_bits = bit * '1' + '0'
+    new_payload = num_bits + len_new_val + num_add + encoded_dict + new_payload
 
     # Write new payload
     if len(new_payload) <= len(payload):
@@ -160,13 +162,20 @@ def encode_frm_file(file_path: str, dir_path: str, file_id: int, debug: bool) ->
 
     # Write data
     content = str(file_id) + ',' + str(len(payload)) + ',' + str(len(new_payload)) + '\n'
-    write(dir_path + "/data/data.csv", content, 'a')
+    write_data(final, dir_path, content, len(new_payload) <= len(payload))
 
     if debug:
         print("num_add: " + str(int(num_add, 2)) + '\n' +
               'len_new_val: ' + str(len(len_new_val) - 1))
 
+        
+def write_data(final: bool, dir_path: str, content: str, compress: bool) -> None:
+    if final:
+        write(dir_path + "/data/data.csv", content, 'a')
+    elif compress:
+        write(dir_path + "/data/data.csv", content, 'a')
 
+        
 def encode_frm_files(dir_path: str, debug: bool) -> None:
     """ Encode payloads from multiple files """
     # Set the working directory
@@ -182,11 +191,20 @@ def encode_frm_files(dir_path: str, debug: bool) -> None:
         print("encode payload " + str(file_id))
         if files[i][0] == '.':
             continue
-        encode_frm_file(files[i], dir_path, file_id, debug)
+        encode_frm_file(files[i], dir_path, file_id, debug, 4, False)
+    write(dir_path + "/result.txt", '\n', 'a')
+
+    
+def decode_again(dir_path: str, files: list, bits: int) -> None:
+    """ Decode by different bits"""
+    for file in files:
+        print("encode payload " + str(file))
+        file_path = dir_path[:-12] + "/payloads/payload_"+ str(file) +".txt"
+        encode_frm_file(file_path, dir_path, file, False, bits, True)
 
 
 def perparation(dir_path):
-    """Prepare for encoding"""
+    """ Prepare for encoding"""
     make_directory(dir_path + "/new_payloads")
     make_directory(dir_path + "/data")
 
@@ -205,7 +223,11 @@ def main() -> None:
 
     # Encode
     encode_frm_files(dir_path, False)
-    # encode_frm_file(dir_path +'/payloads/payload_1.txt', dir_path, 1, True)
+    # encode_frm_file(dir_path[:-12] +'/payloads/payload_1.txt', dir_path, 1, True, 4)
+
+    # Encode again
+    files = get_files(dir_path[:-12] + '/huffman_tree/result.txt')
+    decode_again(dir_path, files, 2)
 
 
 if __name__ == "__main__":
